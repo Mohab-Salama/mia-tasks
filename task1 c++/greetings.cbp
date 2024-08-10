@@ -1,0 +1,11 @@
+#include <iostream>
+
+using namespace std;
+
+int main()
+{ string Name[3];
+string Name2[3];
+ scanf("%s %s",&Name,&Name2);
+ printf("Hello, %s %s!",Name,Name2 );
+    return 0;
+}
