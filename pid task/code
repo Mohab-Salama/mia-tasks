@@ -1,0 +1,52 @@
+#define a 0.05
+#define motor 3
+#define encoder 2
+#define pulsesPerRevolution 20
+float error,setpoint,input,output,derivative,integral,previous_error,filterd_Speed;
+float kp = 1.0;
+float ki = 0.5;
+float kd = 0.1;
+double dt;
+volatile long pulseCount = 0;  
+long lastPulseCount = 0;    
+unsigned long lastTime = 0;    
+float encoderSpeed = 0;       
+
+
+
+void setup() {
+  pinMode(motor,OUTPUT);
+  pinMode(encoder,INPUT);
+  Serial.begin(9600);
+}
+float readEncoder() {
+    unsigned long currentTime = millis();
+    unsigned long timeElapsed = currentTime - lastTime;
+
+    if (timeElapsed >= 100) {  /
+        long pulseDiff = pulseCount - lastPulseCount;
+        encoderSpeed = (pulseDiff / (float)pulsesPerRevolution) * (1000.0 / timeElapsed) * 60.0;
+        lastPulseCount = pulseCount;
+        lastTime = currentTime;
+    }
+
+    return encoderSpeed;
+}
+float smoothStart(float currentSpeed, float targetSpeed) {
+  filterd_Speed = alpha * targetSpeed + (1 - alpha) * filterd_Speed;
+  return filterd_Speed;
+}
+
+void loop() {
+  input = readEncoder();
+   setpoint = smoothStart(setpoint, 180);  
+  double Now = millis();
+  dt = (Now - last_time)/1000.00;
+  last_time = Now;
+  error = setpoint - input;
+  integral += error;
+  derivative = (error - previousError)/dt;
+  output = kp * error + ki * integral + kd * derivative;
+  previousError = error;
+  analogWrite(motor, output);
+}
